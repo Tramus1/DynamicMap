@@ -1,14 +1,18 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Dynamic Map with Convex Hull</title>
+    <title>Dynamic Map with Circles</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6.5.0/turf.min.js"></script>
     <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
         #map {
+            height: 100%;
             width: 100%;
-            height: 500px;
         }
     </style>
 </head>
@@ -23,7 +27,7 @@
         }
 
         // Initialize the map
-        var map = L.map('map').setView([14.10264, -87.18953], 13);
+        var map = L.map('map').setView([14.10264, -87.18953], 14);
 
         // Add OpenStreetMap tile layer
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -43,18 +47,6 @@
             8: "pink"
         };
 
-        // Define icons for houses and apartments
-        const icons = {
-            apartment: L.icon({
-                iconUrl: 'https://img.icons8.com/color/48/apartment.png',
-                iconSize: [32, 32]
-            }),
-            house: L.icon({
-                iconUrl: 'https://img.icons8.com/color/48/home.png',
-                iconSize: [32, 32]
-            })
-        };
-
         // Load points from the query string
         const points = getQueryParams();
 
@@ -62,56 +54,21 @@
             console.log("No points provided in query string.");
         }
 
-        // Group points by sector
-        const sectors = {};
-
+        // Add circles and markers for each point
         points.forEach(point => {
-            if (!sectors[point.sector]) {
-                sectors[point.sector] = [];
-            }
-            // Add [lon, lat] for Turf.js
-            sectors[point.sector].push([point.lon, point.lat]);
-        });
+            // Determine sector color
+            const color = sectorColors[point.sector] || "gray"; // Default to gray
 
-        // Draw convex hull for each sector
-        Object.keys(sectors).forEach(sector => {
-            const color = sectorColors[sector] || "gray";
-            const sectorPoints = sectors[sector];
+            // Add a circle to represent the point
+            L.circle([point.lat, point.lon], {
+                color: color,
+                fillColor: color,
+                fillOpacity: 0.5,
+                radius: 25 // Radius in meters (50m diameter)
+            }).addTo(map);
 
-            if (sectorPoints.length > 2) {
-                // Calculate convex hull using Turf.js
-                const turfPoints = turf.featureCollection(
-                    sectorPoints.map(([lon, lat]) => turf.point([lon, lat]))
-                );
-                const hull = turf.convex(turfPoints);
-
-                if (hull) {
-                    const hullCoordinates = hull.geometry.coordinates[0].map(
-                        ([lon, lat]) => [lat, lon] // Convert back to [lat, lon] for Leaflet
-                    );
-
-                    // Add the polygon to the map
-                    L.polygon(hullCoordinates, {
-                        color: color,
-                        fillColor: color,
-                        fillOpacity: 0.3
-                    }).addTo(map).bindPopup(`Sector: ${sector}`);
-                }
-            }
-        });
-
-        // Add markers for each point
-        points.forEach(point => {
-            // Determine icon
-            let icon = null;
-            if (point.buildingType === "apartment") {
-                icon = icons.apartment;
-            } else if (point.buildingType === "sfr") {
-                icon = icons.house;
-            }
-
-            // Add marker
-            L.marker([point.lat, point.lon], { icon: icon })
+            // Add a marker for the point
+            L.marker([point.lat, point.lon])
                 .addTo(map)
                 .bindPopup(
                     `<b>${point.name}</b><br>Sector: ${point.sector}<br>Type: ${point.buildingType || "Warden"}`
