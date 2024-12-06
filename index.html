@@ -32,78 +32,70 @@
 
         // Define sector colors for sectors 1 through 8
         const sectorColors = {
-            1: "rgba(0, 0, 255, 0.3)",  // Blue
-            2: "rgba(255, 0, 0, 0.3)",  // Red
-            3: "rgba(0, 255, 0, 0.3)",  // Green
-            4: "rgba(255, 165, 0, 0.3)", // Orange
-            5: "rgba(128, 0, 128, 0.3)", // Purple
-            6: "rgba(255, 255, 0, 0.3)", // Yellow
-            7: "rgba(0, 255, 255, 0.3)", // Cyan
-            8: "rgba(255, 192, 203, 0.3)" // Pink
+            1: "blue",
+            2: "red",
+            3: "green",
+            4: "orange",
+            5: "purple",
+            6: "yellow",
+            7: "cyan",
+            8: "pink"
         };
 
-        // Define icons using Leaflet's built-in markers
+        // Define icons for houses and apartments
         const icons = {
-            apartment: new L.Icon.Default(),
-            house: new L.Icon.Default(),
-            primaryWarden: L.icon({
-                iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x-green.png',
-                shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-                iconSize: [25, 41],
-                iconAnchor: [12, 41],
-                popupAnchor: [1, -34],
-                shadowSize: [41, 41]
+            apartment: L.icon({
+                iconUrl: 'https://img.icons8.com/color/48/apartment.png', // Replace with a valid apartment icon URL
+                iconSize: [32, 32]
             }),
-            secondaryWarden: L.icon({
-                iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x-orange.png',
-                shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-                iconSize: [25, 41],
-                iconAnchor: [12, 41],
-                popupAnchor: [1, -34],
-                shadowSize: [41, 41]
+            house: L.icon({
+                iconUrl: 'https://img.icons8.com/color/48/home.png', // Replace with a valid house icon URL
+                iconSize: [32, 32]
             })
         };
 
         // Load points from the query string
         const points = getQueryParams();
 
-        // Function to draw sector boundaries
-        function drawSector(lat, lon, sector, radius = 500) {
-            const color = sectorColors[sector] || "rgba(128, 128, 128, 0.3)"; // Default to gray
-            L.circle([lat, lon], {
+        // Group points by sector for creating polygons
+        const sectors = {};
+
+        points.forEach(point => {
+            if (!sectors[point.sector]) {
+                sectors[point.sector] = [];
+            }
+            sectors[point.sector].push([point.lat, point.lon]);
+        });
+
+        // Draw polygons for each sector
+        Object.keys(sectors).forEach(sector => {
+            const color = sectorColors[sector] || "gray"; // Default to gray
+            L.polygon(sectors[sector], {
                 color: color,
                 fillColor: color,
-                fillOpacity: 0.5,
-                radius: radius
-            }).addTo(map);
-        }
+                fillOpacity: 0.2
+            }).addTo(map).bindPopup(`Sector: ${sector}`);
+        });
 
-        // Loop through each point and add it to the map
-        if (points.length > 0) {
-            points.forEach(point => {
-                // Determine icon based on point data
-                let icon;
-                if (point.warden === "primary") {
-                    icon = icons.primaryWarden;
-                } else if (point.warden === "secondary") {
-                    icon = icons.secondaryWarden;
-                } else if (point.buildingType === "apartment") {
-                    icon = icons.apartment;
-                } else if (point.buildingType === "sfr") {
-                    icon = icons.house;
-                }
+        // Add markers for each point
+        points.forEach(point => {
+            // Determine icon or color
+            let icon = null;
+            if (point.buildingType === "apartment") {
+                icon = icons.apartment;
+            } else if (point.buildingType === "sfr") {
+                icon = icons.house;
+            }
 
-                // Draw sector boundary (colored area)
-                drawSector(point.lat, point.lon, point.sector);
+            // Add marker with the appropriate icon or sector color
+            const markerOptions = icon
+                ? { icon: icon }
+                : { color: sectorColors[point.sector] || "gray" };
 
-                // Add the marker with the appropriate icon
-                L.marker([point.lat, point.lon], { icon: icon })
-                    .addTo(map)
-                    .bindPopup(`<b>${point.name}</b><br>Sector: ${point.sector}<br>Type: ${point.buildingType}`);
-            });
-        } else {
-            console.log("No points provided. Displaying a blank map.");
-        }
+            L.marker([point.lat, point.lon], markerOptions)
+                .addTo(map)
+                .bindPopup(`<b>${point.name}</b><br>Sector: ${point.sector}<br>Type: ${point.buildingType}`);
+        });
     </script>
 </body>
 </html>
