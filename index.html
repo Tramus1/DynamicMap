@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Dynamic Map with Circles</title>
+    <title>Dynamic Map</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
@@ -47,6 +47,18 @@
             8: "pink"
         };
 
+        // Define icons for houses and apartments
+        const icons = {
+            apartment: L.icon({
+                iconUrl: 'https://img.icons8.com/color/48/apartment.png', // Replace with valid apartment icon URL
+                iconSize: [32, 32]
+            }),
+            house: L.icon({
+                iconUrl: 'https://img.icons8.com/color/48/home.png', // Replace with valid house icon URL
+                iconSize: [32, 32]
+            })
+        };
+
         // Load points from the query string
         const points = getQueryParams();
 
@@ -54,26 +66,39 @@
             console.log("No points provided in query string.");
         }
 
-        // Add circles and markers for each point
+        // Add markers for each point
         points.forEach(point => {
-            // Determine sector color
-            const color = sectorColors[point.sector] || "gray"; // Default to gray
-
-            // Add a circle to represent the point
-            L.circle([point.lat, point.lon], {
-                color: color,
-                fillColor: color,
-                fillOpacity: 0.5,
-                radius: 25 // Radius in meters (50m diameter)
-            }).addTo(map);
-
-            // Add a marker for the point
-            L.marker([point.lat, point.lon])
-                .addTo(map)
-                .bindPopup(
-                    `<b>${point.name}</b><br>Sector: ${point.sector}<br>Type: ${point.buildingType || "Warden"}`
-                );
+            // Determine the marker's appearance based on its type
+            if (point.buildingType === "apartment") {
+                // Add an apartment icon
+                L.marker([point.lat, point.lon], { icon: icons.apartment })
+                    .addTo(map)
+                    .bindPopup(
+                        `<b>${point.name}</b><br>Sector: ${point.sector}<br>Type: Apartment`
+                    );
+            } else if (point.buildingType === "sfr") {
+                // Add a house icon
+                L.marker([point.lat, point.lon], { icon: icons.house })
+                    .addTo(map)
+                    .bindPopup(
+                        `<b>${point.name}</b><br>Sector: ${point.sector}<br>Type: House`
+                    );
+            } else if (point.warden) {
+                // Add a regular circular marker for residential wardens
+                const color = sectorColors[point.sector] || "gray"; // Default to gray if sector color is undefined
+                L.circle([point.lat, point.lon], {
+                    color: color,
+                    fillColor: color,
+                    fillOpacity: 0.5,
+                    radius: 25 // 50m diameter
+                })
+                    .addTo(map)
+                    .bindPopup(
+                        `<b>${point.name}</b><br>Sector: ${point.sector}<br>Type: Residential Warden`
+                    );
+            }
         });
     </script>
 </body>
 </html>
+
