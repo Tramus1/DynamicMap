@@ -4,6 +4,7 @@
     <title>Dynamic Map</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/@turf/turf/turf.min.js"></script>
     <style>
         #map {
             width: 100%;
@@ -57,24 +58,35 @@
         // Load points from the query string
         const points = getQueryParams();
 
-        // Group points by sector for creating polygons
+        // Group points by sector
         const sectors = {};
 
         points.forEach(point => {
             if (!sectors[point.sector]) {
                 sectors[point.sector] = [];
             }
-            sectors[point.sector].push([point.lat, point.lon]);
+            sectors[point.sector].push([point.lon, point.lat]); // Note: Turf.js uses [lon, lat]
         });
 
-        // Draw polygons for each sector
+        // Draw convex hull for each sector
         Object.keys(sectors).forEach(sector => {
             const color = sectorColors[sector] || "gray"; // Default to gray
-            L.polygon(sectors[sector], {
-                color: color,
-                fillColor: color,
-                fillOpacity: 0.2
-            }).addTo(map).bindPopup(`Sector: ${sector}`);
+            const sectorPoints = sectors[sector];
+
+            if (sectorPoints.length > 2) {
+                // Calculate convex hull using Turf.js
+                const hull = turf.convex(turf.points(sectorPoints.map(([lon, lat]) => turf.point([lon, lat]))));
+
+                // Convert the convex hull back to Leaflet's format
+                const hullCoordinates = hull.geometry.coordinates[0].map(([lon, lat]) => [lat, lon]);
+
+                // Add the polygon to the map
+                L.polygon(hullCoordinates, {
+                    color: color,
+                    fillColor: color,
+                    fillOpacity: 0.3
+                }).addTo(map).bindPopup(`Sector: ${sector}`);
+            }
         });
 
         // Add markers for each point
