@@ -47,20 +47,23 @@
             8: "pink"
         };
 
-        // Define icons for houses, apartments, and residential wardens
+        // Define icons for houses, apartments, and wardens
         const icons = {
             apartment: L.icon({
-                iconUrl: 'https://img.icons8.com/000000/apartment', // Replace with valid apartment icon URL
+                iconUrl: 'https://img.icons8.com/000000/apartment.png',
                 iconSize: [32, 32]
             }),
             house: L.icon({
-                iconUrl: 'https://img.icons8.com//000000/home', // Replace with valid house icon URL
+                iconUrl: 'https://img.icons8.com/000000/home.png',
                 iconSize: [32, 32]
             }),
-            warden: L.icon({
-                iconUrl: 'https://img.icons8.com/000000/flag',
+            primWarden: L.icon({
+                iconUrl: 'https://img.icons8.com/E4080A/flag',
                 iconSize: [25, 41]
-               
+            }),
+            secWarden: L.icon({
+                iconUrl: 'https://img.icons8.com/E4080A/home',
+                iconSize: [25, 41]
             })
         };
 
@@ -90,8 +93,10 @@
                 icon = icons.apartment;
             } else if (point.buildingType === "sfr") {
                 icon = icons.house;
-            } else if (point.warden) {
-                icon = icons.warden;
+            } else if (point.warden === "Prim") {
+                icon = icons.primWarden;
+            } else if (point.warden === "Sec") {
+                icon = icons.secWarden;
             }
 
             // Add the marker with the appropriate icon
@@ -106,4 +111,3 @@
     </script>
 </body>
 </html>
-
