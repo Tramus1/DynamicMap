@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Dynamic Map</title>
+    <title>Dynamic Map with Convex Hull</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://unpkg.com/@turf/turf/turf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6.5.0/turf.min.js"></script>
     <style>
         #map {
             width: 100%;
@@ -31,7 +31,7 @@
             attribution: '© OpenStreetMap contributors'
         }).addTo(map);
 
-        // Define sector colors for sectors 1 through 8
+        // Define sector colors
         const sectorColors = {
             1: "blue",
             2: "red",
@@ -46,17 +46,21 @@
         // Define icons for houses and apartments
         const icons = {
             apartment: L.icon({
-                iconUrl: 'https://img.icons8.com/color/48/apartment.png', // Replace with a valid apartment icon URL
+                iconUrl: 'https://img.icons8.com/color/48/apartment.png',
                 iconSize: [32, 32]
             }),
             house: L.icon({
-                iconUrl: 'https://img.icons8.com/color/48/home.png', // Replace with a valid house icon URL
+                iconUrl: 'https://img.icons8.com/color/48/home.png',
                 iconSize: [32, 32]
             })
         };
 
         // Load points from the query string
         const points = getQueryParams();
+
+        if (points.length === 0) {
+            console.log("No points provided in query string.");
+        }
 
         // Group points by sector
         const sectors = {};
@@ -65,33 +69,40 @@
             if (!sectors[point.sector]) {
                 sectors[point.sector] = [];
             }
-            sectors[point.sector].push([point.lon, point.lat]); // Note: Turf.js uses [lon, lat]
+            // Add [lon, lat] for Turf.js
+            sectors[point.sector].push([point.lon, point.lat]);
         });
 
         // Draw convex hull for each sector
         Object.keys(sectors).forEach(sector => {
-            const color = sectorColors[sector] || "gray"; // Default to gray
+            const color = sectorColors[sector] || "gray";
             const sectorPoints = sectors[sector];
 
             if (sectorPoints.length > 2) {
                 // Calculate convex hull using Turf.js
-                const hull = turf.convex(turf.points(sectorPoints.map(([lon, lat]) => turf.point([lon, lat]))));
+                const turfPoints = turf.featureCollection(
+                    sectorPoints.map(([lon, lat]) => turf.point([lon, lat]))
+                );
+                const hull = turf.convex(turfPoints);
 
-                // Convert the convex hull back to Leaflet's format
-                const hullCoordinates = hull.geometry.coordinates[0].map(([lon, lat]) => [lat, lon]);
+                if (hull) {
+                    const hullCoordinates = hull.geometry.coordinates[0].map(
+                        ([lon, lat]) => [lat, lon] // Convert back to [lat, lon] for Leaflet
+                    );
 
-                // Add the polygon to the map
-                L.polygon(hullCoordinates, {
-                    color: color,
-                    fillColor: color,
-                    fillOpacity: 0.3
-                }).addTo(map).bindPopup(`Sector: ${sector}`);
+                    // Add the polygon to the map
+                    L.polygon(hullCoordinates, {
+                        color: color,
+                        fillColor: color,
+                        fillOpacity: 0.3
+                    }).addTo(map).bindPopup(`Sector: ${sector}`);
+                }
             }
         });
 
         // Add markers for each point
         points.forEach(point => {
-            // Determine icon or color
+            // Determine icon
             let icon = null;
             if (point.buildingType === "apartment") {
                 icon = icons.apartment;
@@ -99,14 +110,12 @@
                 icon = icons.house;
             }
 
-            // Add marker with the appropriate icon or sector color
-            const markerOptions = icon
-                ? { icon: icon }
-                : { color: sectorColors[point.sector] || "gray" };
-
-            L.marker([point.lat, point.lon], markerOptions)
+            // Add marker
+            L.marker([point.lat, point.lon], { icon: icon })
                 .addTo(map)
-                .bindPopup(`<b>${point.name}</b><br>Sector: ${point.sector}<br>Type: ${point.buildingType}`);
+                .bindPopup(
+                    `<b>${point.name}</b><br>Sector: ${point.sector}<br>Type: ${point.buildingType || "Warden"}`
+                );
         });
     </script>
 </body>
