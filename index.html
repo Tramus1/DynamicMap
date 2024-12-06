@@ -42,23 +42,27 @@
             8: "pink"
         };
 
-        // Define custom icons for each type
+        // Define icons using Leaflet's default marker customization
         const icons = {
-            apartment: L.icon({
-                iconUrl: 'https://img.icons8.com/color/48/apartment.png', // Replace with your apartment icon URL
-                iconSize: [32, 32]
+            apartment: L.divIcon({
+                className: 'custom-div-icon',
+                html: "<div style='background-color:blue; border-radius:50%; width:20px; height:20px;'></div>",
+                iconSize: [20, 20]
             }),
-            house: L.icon({
-                iconUrl: 'https://img.icons8.com/color/48/home.png', // Replace with your house icon URL
-                iconSize: [32, 32]
+            house: L.divIcon({
+                className: 'custom-div-icon',
+                html: "<div style='background-color:green; border-radius:50%; width:20px; height:20px;'></div>",
+                iconSize: [20, 20]
             }),
-            primaryWarden: L.icon({
-                iconUrl: 'https://img.icons8.com/color/48/security-guard-male.png', // Replace with your primary warden icon URL
-                iconSize: [36, 36]
+            primaryWarden: L.divIcon({
+                className: 'custom-div-icon',
+                html: "<div style='background-color:red; border-radius:50%; width:24px; height:24px;'></div>",
+                iconSize: [24, 24]
             }),
-            secondaryWarden: L.icon({
-                iconUrl: 'https://img.icons8.com/color/48/security-guard-female.png', // Replace with your secondary warden icon URL
-                iconSize: [36, 36]
+            secondaryWarden: L.divIcon({
+                className: 'custom-div-icon',
+                html: "<div style='background-color:orange; border-radius:50%; width:24px; height:24px;'></div>",
+                iconSize: [24, 24]
             })
         };
 
@@ -102,4 +106,3 @@
     </script>
 </body>
 </html>
-
