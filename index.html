@@ -1,4 +1,4 @@
-DOCTYPE html>
+<!DOCTYPE html>
 <html>
 <head>
     <title>Dynamic Map</title>
@@ -14,15 +14,15 @@ DOCTYPE html>
 <body>
     <div id="map"></div>
     <script>
-        // Parse dynamic points from the query string
+        // Function to parse the query string for 'data' parameter
         function getQueryParams() {
             const query = new URLSearchParams(window.location.search);
             const data = query.get('data');
             return data ? JSON.parse(decodeURIComponent(data)) : [];
         }
 
-        // Initialize the map centered on Tegucigalpa
-        var map = L.map('map').setView([14.0881, -87.1912], 13);
+        // Initialize the map
+        var map = L.map('map').setView([14.10264, -87.18953], 13);
 
         // Add OpenStreetMap tile layer
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -30,13 +30,71 @@ DOCTYPE html>
             attribution: '© OpenStreetMap contributors'
         }).addTo(map);
 
-        // Add markers dynamically from query string data
+        // Define sector colors for sectors 1 through 8
+        const sectorColors = {
+            1: "blue",
+            2: "red",
+            3: "green",
+            4: "orange",
+            5: "purple",
+            6: "yellow",
+            7: "cyan",
+            8: "pink"
+        };
+
+        // Define custom icons
+        const icons = {
+            apartment: L.icon({
+                iconUrl: 'https://example.com/apartment-icon.png', // Replace with your apartment icon URL
+                iconSize: [25, 25]
+            }),
+            house: L.icon({
+                iconUrl: 'https://example.com/house-icon.png', // Replace with your house icon URL
+                iconSize: [25, 25]
+            }),
+            primaryWarden: L.icon({
+                iconUrl: 'https://example.com/primary-warden-icon.png', // Replace with your primary warden icon URL
+                iconSize: [30, 30]
+            }),
+            secondaryWarden: L.icon({
+                iconUrl: 'https://example.com/secondary-warden-icon.png', // Replace with your secondary warden icon URL
+                iconSize: [30, 30]
+            })
+        };
+
+        // Load points from the query string
         const points = getQueryParams();
+
+        // Loop through each point and add it to the map
         if (points.length > 0) {
             points.forEach(point => {
-                L.marker([point.lat, point.lon])
+                // Determine icon based on point data
+                let icon;
+                if (point.warden === "primary") {
+                    icon = icons.primaryWarden;
+                } else if (point.warden === "secondary") {
+                    icon = icons.secondaryWarden;
+                } else if (point.buildingType === "apartment") {
+                    icon = icons.apartment;
+                } else if (point.buildingType === "sfr") {
+                    icon = icons.house;
+                }
+
+                // Determine sector color
+                const color = sectorColors[point.sector] || "gray"; // Default to gray if sector is undefined
+
+                // Add a circle around the point with the sector color
+                L.circle([point.lat, point.lon], {
+                    color: color,
+                    fillColor: color,
+                    fillOpacity: 0.5,
+                    radius: 50
+                }).addTo(map);
+
+                // Add the marker with the appropriate icon
+                L.marker([point.lat, point.lon], { icon: icon })
                     .addTo(map)
-                    .bindPopup(`<b>${point.name}</b>`);
+                    .bindPopup(`<b>${point.name}</b><br>Sector: ${point.sector}<br>Type: ${point.buildingType}`);
             });
         } else {
             console.log("No points provided. Displaying a blank map.");
