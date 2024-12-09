@@ -17,11 +17,11 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 // Define sector colors
 const sectorColors = {
     1: "blue",
-    2: "red",
+    2: "brown",
     3: "green",
     4: "orange",
     5: "purple",
-    6: "yellow",
+    6: "gray",
     7: "cyan",
     8: "pink"
 };
