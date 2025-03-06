@@ -31,9 +31,9 @@ function createDynamicSVG(point, sectorColor) {
     const isWarden = point.warden === "Prim" || point.warden === "Sec";
     const outerColor = isWarden
         ? point.warden === "Prim"
-            ? "red"
-            : "yellow"
-        : "black";
+            ? "clear"
+            : "clear"
+        : "clear";
     const wallColor = isWarden ? "white" : "black";
     const roofColor = isWarden ? "white" : "black";
 
@@ -56,11 +56,7 @@ points.forEach(point => {
     const sectorColor = sectorColors[point.sector] || "gray";
 
     // Create a custom icon using the dynamic SVG
-    const icon = L.divIcon({
-        className: "custom-icon",
-        html: createDynamicSVG(point, sectorColor),
-        iconSize: [64, 64]
-    });
+    
 
     // Add the marker to the map
     L.marker([point.lat, point.lon], { icon: icon })
