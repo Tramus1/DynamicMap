@@ -66,6 +66,6 @@ points.forEach(point => {
     L.marker([point.lat, point.lon], { icon: icon })
         .addTo(map)
         .bindPopup(
-            `<b>${point.name}</b><br>Sector: ${point.sector}<br>${point.warden ? "Warden: " + point.warden : "Non-Warden"}`
+            `<b>${point.name}</b><br>Sector: ${point.sector}<br>`
         );
 });
